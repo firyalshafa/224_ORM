@@ -41,3 +41,21 @@ app.get('/komik', async (req, res) => {
         res.send(err);
     }
 });
+
+app.put('/komik/:id', async(req,res)=>{
+    const id = req.params.id;
+    const data =req.body;
+
+    try{
+        const komik = await db.komik.findByPk(id);
+        if(!komik){
+            return res.status(404),send({massage:'komik tidak di temukan'});
+
+        }
+        await komik.update(data);
+        res.send({massage: 'komik berhasil di update', komik})
+
+    }catch(err){
+        res.status(505).send(err);
+    }
+});
