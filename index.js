@@ -2,80 +2,76 @@ const express = require('express');
 const app = express();
 const db = require('./models');
 const PORT = 3000;
+
 app.use(express.json());
-app.use(express.urlencoded({
-    extended : true
-}));
+app.use(express.urlencoded({ extended: true }));
 
-app.listen(PORT,()=>{
-    console.log('server started on port 3000');
-})
-
+// Sinkronisasi database lalu jalankan server
 db.sequelize.sync()
-.then((result) => {
-    app.listen(3000,()=>{
-        console.log('server started');
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log(`Server started on port ${PORT}`);
+        });
     })
+    .catch((err) => {
+        console.log(err);
+    });
 
-})
+// ====== ROUTES ======
 
-.catch((err)=>{
-    console.log(err);
-})
-//
-app.post("/komik",async (Req, res)=> {
-    const data= req.body;
-    try{
-        const komik = await db.komik.create(data);
-        res.send(komik);
-    }catch(err){
-        res.send(err)
-    }
-});
-
-app.get('/komik', async (req, res) => {
+// CREATE (POST)
+app.post("/komik", async (req, res) => {
+    const data = req.body;
     try {
-        const komik = await db.komik.findAll();
+        const komik = await db.Komik.create(data);
         res.send(komik);
     } catch (err) {
-        res.send(err);
+        res.status(500).send(err);
     }
 });
 
-app.put('/komik/:id', async(req,res)=>{
+// READ (GET)
+app.get('/komik', async (req, res) => {
+    try {
+        const komik = await db.Komik.findAll();
+        res.send(komik);
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+// UPDATE (PUT)
+app.put('/komik/:id', async (req, res) => {
     const id = req.params.id;
-    const data =req.body;
+    const data = req.body;
 
-    try{
-        const komik = await db.komik.findByPk(id);
-        if(!komik){
-            return res.status(404),send({massage:'komik tidak di temukan'});
-
+    try {
+        const komik = await db.Komik.findByPk(id);
+        if (!komik) {
+            return res.status(404).send({ message: 'Komik tidak ditemukan' });
         }
-        await komik.update(data);
-        res.send({massage: 'komik berhasil di update', komik})
 
-    }catch(err){
-        res.status(505).send(err);
+        await komik.update(data);
+        res.send({ message: 'Komik berhasil diupdate', komik });
+    } catch (err) {
+        res.status(500).send(err);
     }
 });
 
+// DELETE
 app.delete('/komik/:id', async (req, res) => {
     const id = req.params.id;
 
     try {
-        const komik = await db.komik.findByPk(id);
+        const komik = await db.Komik.findByPk(id);
 
         if (!komik) {
             return res.status(404).send({ message: 'Komik tidak ditemukan' });
         }
 
         await komik.destroy();
-
         res.send({ message: 'Komik berhasil dihapus' });
-
     } catch (err) {
         res.status(500).send(err);
     }
 });
-
